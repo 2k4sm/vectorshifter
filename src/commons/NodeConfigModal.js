@@ -11,8 +11,8 @@ const fieldTypes = [
 export const NodeConfigModal = ({ onSave, onClose, initialConfig = {} }) => {
   const [config, setConfig] = useState({
         nodeType: initialConfig.nodeType || '',
-        backgroundColor: initialConfig.backgroundColor || '#ffffff',
-        borderColor: initialConfig.borderColor || '#000000',
+        backgroundColor: initialConfig.backgroundColor || '#be87fe',
+        borderColor: initialConfig.borderColor || '#150536',
         inputs: initialConfig.inputs || [],
         outputs: initialConfig.outputs || [],
         fields: initialConfig.fields || [],
@@ -31,11 +31,23 @@ export const NodeConfigModal = ({ onSave, onClose, initialConfig = {} }) => {
       inputs: [...prev.inputs, { id: `input-${prev.inputs.length}`, label: `Input ${prev.inputs.length + 1}` }]
     }));
   };
+  const removeInput = (id) => {
+    setConfig(prev => ({
+      ...prev,
+      inputs: prev.inputs.filter(input => input.id !== id)
+    }));
+  };
 
   const addOutput = () => {
     setConfig(prev => ({
       ...prev,
       outputs: [...prev.outputs, { id: `output-${prev.outputs.length}`, label: `Output ${prev.outputs.length + 1}` }]
+    }));
+  };
+  const removeOutput = (id) => {
+    setConfig(prev => ({
+      ...prev,
+      outputs: prev.outputs.filter(output => output.id !== id)
     }));
   };
 
@@ -62,6 +74,12 @@ export const NodeConfigModal = ({ onSave, onClose, initialConfig = {} }) => {
       label: '',
       options: []
     });
+  };
+  const removeField = (id) => {
+    setConfig(prev => ({
+      ...prev,
+      fields: prev.fields.filter(field => field.id !== id)
+    }));
   };
 
   const addSelectOption = () => {
@@ -106,56 +124,97 @@ export const NodeConfigModal = ({ onSave, onClose, initialConfig = {} }) => {
 
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+      <div className="bg-purple-200 rounded-lg p-10 sm:w-[40vw] max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Configure Custom Node</h2>
         
         <div className="space-y-4">
           <NodeInput
-            label="Node Type Name"
+            label="Node Type"
             value={config.nodeType}
             onChange={(e) => setConfig(prev => ({ ...prev, nodeType: e.target.value }))}
           />
 
-          <div className="space-y-2">
-            <h3 className="font-medium">Styling</h3>
-            <input
-              type="color"
-              value={config.backgroundColor}
-              onChange={(e) => setConfig(prev => ({ ...prev, backgroundColor: e.target.value }))}
-              className="w-full"
-            />
-            <input
-              type="color"
-              value={config.borderColor}
-              onChange={(e) => setConfig(prev => ({ ...prev, borderColor: e.target.value }))}
-              className="w-full"
-            />
+          <h3 className="font-medium">Styling</h3>
+          <div className="flex justify-evenly">
+            <div className='w-[50%]'>
+              <label className="block">Background Color</label>
+              <input
+                type="color"
+                value={config.backgroundColor}
+                onChange={(e) => setConfig(prev => ({ ...prev, backgroundColor: e.target.value }))}
+                className="w-full rounded-md"
+              />
+            </div>
+            <div className='w-[50%]'>
+              <label className="block">Border Color</label>
+              <input
+                type="color"
+                value={config.borderColor}
+                onChange={(e) => setConfig(prev => ({ ...prev, borderColor: e.target.value }))}
+                className="w-full rounded-md"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
             <h3 className="font-medium">Connection Points</h3>
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 justify-between">
               <button
                 onClick={addInput}
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="w-[50%] p-4 bg-purple-600 text-white rounded hover:bg-purple-700"
               >
-                Add Input
+                Add Inputs
               </button>
               <button
                 onClick={addOutput}
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="w-[50%] p-4 bg-purple-600 text-white rounded hover:bg-purple-700"
               >
-                Add Output
+                Add Outputs
               </button>
             </div>
-            <div className="text-sm">
-              Inputs: {config.inputs.length} | Outputs: {config.outputs.length}
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div>
+                <div className="text-purple-900 font-medium">Inputs: {config.inputs.length}</div>
+                {config.inputs.map(input => (
+                  <div key={input.id} className="flex items-center justify-between bg-purple-100 p-2 rounded mt-2">
+                    <span>{input.label}</span>
+                    <button
+                      onClick={() => removeInput(input.id)}
+                      className="p-1 hover:bg-purple-200 rounded"
+                    >
+                      X
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className="text-purple-900 font-medium">Outputs: {config.outputs.length}</div>
+                {config.outputs.map(output => (
+                  <div key={output.id} className="flex items-center justify-between bg-purple-100 p-2 rounded mt-2">
+                    <span>{output.label}</span>
+                    <button
+                      onClick={() => removeOutput(output.id)}
+                      className="p-1 hover:bg-purple-200 rounded"
+                    >
+                      X
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <h3 className="font-medium">Fields</h3>
+            <div className='flex justify-between'>
+              <h3 className="font-medium">Fields</h3>
+              <button
+                  onClick={addField}
+                  className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-green-600"
+                >
+                  Add Field
+                </button>
+            </div>
             <div className="space-y-2">
               <NodeSelect
                 label="Field Type"
@@ -197,31 +256,37 @@ export const NodeConfigModal = ({ onSave, onClose, initialConfig = {} }) => {
                   ))}
                 </div>
               )}
-
-              <button
-                onClick={addField}
-                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-              >
-                Add Field
-              </button>
             </div>
-
-            <div className="text-sm">
-              Current Fields: {config.fields.length}
+            <div>
+              <div className="text-purple-900 font-medium">Current Fields: {config.fields.length}</div>
+              {config.fields.map(field => (
+                <div key={field.id} className="flex items-center justify-between bg-purple-100 p-2 rounded mt-2">
+                  <div>
+                    <span className="font-medium">{field.label}</span>
+                    <span className="text-sm text-purple-600 ml-2">({field.type})</span>
+                  </div>
+                  <button
+                    onClick={() => removeField(field.id)}
+                    className="p-1 hover:bg-purple-200 rounded"
+                  >
+                    X
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end space-x-2 mt-4">
+        <div className="flex justify-between space-x-2 mt-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            className="w-[30%] p-5 bg-purple-500 text-white rounded hover:bg-red-600"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="w-[30%] p-5 bg-purple-500 text-white rounded hover:bg-green-600"
           >
             Save Node
           </button>

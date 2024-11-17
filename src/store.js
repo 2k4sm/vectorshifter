@@ -1,6 +1,7 @@
 // store.js
 
 import { create } from "zustand";
+import { persist } from 'zustand/middleware';
 import {
     addEdge,
     applyNodeChanges,
@@ -8,9 +9,10 @@ import {
     MarkerType,
 } from 'reactflow';
 
-export const useStore = create((set, get) => ({
+export const useStore = create(persist((set, get) => ({
     nodes: [],
     edges: [],
+    nodeIDs: {},
     customNodeTypes: {},
 
     getNodeID: (type) => {
@@ -113,4 +115,61 @@ export const useStore = create((set, get) => ({
             nodeType: type 
         };
     },
-}));
+    deleteNodeType: (nodeType) => {
+        set(state => {
+            const { [nodeType]: removed, ...remainingNodeTypes } = state.customNodeTypes;
+
+            const updatedNodes = state.nodes.filter(node => 
+                !(node.type === 'custom' && node.data.nodeType === nodeType)
+            );
+
+            const deletedNodeIds = new Set(
+                state.nodes
+                    .filter(node => node.type === 'custom' && node.data.nodeType === nodeType)
+                    .map(node => node.id)
+            );
+
+            const updatedEdges = state.edges.filter(
+                edge => !deletedNodeIds.has(edge.source) && !deletedNodeIds.has(edge.target)
+            );
+
+            return {
+                customNodeTypes: remainingNodeTypes,
+                nodes: updatedNodes,
+                edges: updatedEdges
+            };
+        });
+    },
+    updateNodeType: (oldType, newConfig) => {
+        set(state => {
+            const { [oldType]: removed, ...remainingTypes } = state.customNodeTypes;
+
+            const updatedNodes = state.nodes.map(node => {
+                if (node.type === 'custom' && node.data.nodeType === oldType) {
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            nodeType: newConfig.nodeType,
+                            backgroundColor: newConfig.backgroundColor,
+                            borderColor: newConfig.borderColor,
+                            inputs: newConfig.inputs || [],
+                            outputs: newConfig.outputs || [],
+                            fields: newConfig.fields || [],
+                            fieldValues: node.data.fieldValues || {}
+                        }
+                    };
+                }
+                return node;
+            });
+
+            return {
+                customNodeTypes: {
+                    ...remainingTypes,
+                    [newConfig.nodeType]: newConfig
+                },
+                nodes: updatedNodes
+            };
+        });
+    },
+})));

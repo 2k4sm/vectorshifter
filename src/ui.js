@@ -2,8 +2,8 @@
 // Displays the drag-and-drop UI
 // --------------------------------------------------
 
-import { useState, useRef, useCallback } from 'react';
-import ReactFlow, { Controls, Background, MiniMap } from 'reactflow';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import ReactFlow, { Controls, Background, MiniMap, useKeyPress } from 'reactflow';
 import { useStore } from './store';
 import { shallow } from 'zustand/shallow';
 import { InputNode } from './nodes/inputNode';
@@ -35,6 +35,7 @@ const getInitNodeDataSelector = state => state.getInitNodeData;
 export const PipelineUI = () => {
     const reactFlowWrapper = useRef(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
+    const [selectedElements, setSelectedElements] = useState({ nodes: [], edges: [] });
 
     const nodes = useStore(nodeSelector, shallow);
     const edges = useStore(edgeSelector, shallow);
@@ -44,6 +45,76 @@ export const PipelineUI = () => {
     const getNodeID = useStore(getNodeIDSelector);
     const addNode = useStore(addNodeSelector);
     const getInitNodeData = useStore(getInitNodeDataSelector);
+
+    const onSelectionChange = useCallback((params) => {
+        setSelectedElements({
+            nodes: params.nodes || [],
+            edges: params.edges || []
+        });
+    }, []);
+    const onNodeContextMenu = useCallback((event, node) => {
+        event.preventDefault();
+        
+        const connectedEdges = edges.filter(
+            edge => edge.source === node.id || edge.target === node.id
+        );
+        
+        if (connectedEdges.length > 0) {
+            onEdgesChange(
+                connectedEdges.map(edge => ({
+                    type: 'remove',
+                    id: edge.id
+                }))
+            );
+        }
+    }, [edges, onEdgesChange]);
+
+    const handleDelete = useCallback(() => {
+        if (selectedElements.edges.length > 0) {
+            onEdgesChange(
+                selectedElements.edges.map(edge => ({
+                    type: 'remove',
+                    id: edge.id
+                }))
+            );
+        }
+
+        if (selectedElements.nodes.length > 0) {
+            onNodesChange(
+                selectedElements.nodes.map(node => ({
+                    type: 'remove',
+                    id: node.id
+                }))
+            );
+
+            const nodesToDelete = new Set(selectedElements.nodes.map(node => node.id));
+            const connectedEdges = edges.filter(
+                edge => nodesToDelete.has(edge.source) || nodesToDelete.has(edge.target)
+            );
+
+            if (connectedEdges.length > 0) {
+                onEdgesChange(
+                    connectedEdges.map(edge => ({
+                        type: 'remove',
+                        id: edge.id
+                    }))
+                );
+            }
+        }
+    }, [selectedElements, edges, onNodesChange, onEdgesChange]);
+
+    useEffect(() => {
+        const onKeyDown = (event) => {
+            if (event.key === 'Delete' || event.key === 'Backspace') {
+                handleDelete();
+            }
+        };
+
+        document.addEventListener('keydown', onKeyDown);
+        return () => {
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [handleDelete]);
 
     const onDrop = useCallback(
         (event) => {
@@ -58,7 +129,7 @@ export const PipelineUI = () => {
             
             try {
                 data = JSON.parse(event.dataTransfer.getData('application/reactflow'));
-                console.log('Dropped data:', data); // Debug log
+                console.log('Dropped data:', data);
             } catch (err) {
                 console.error('Failed to parse drag data:', err);
                 return;
@@ -77,7 +148,7 @@ export const PipelineUI = () => {
                 position,
                 data: nodeData
             };
-            console.log('Adding new node:', newNode); // Debug log
+            console.log('Adding new node:', newNode);
             addNode(newNode);
         },
         [reactFlowInstance, getNodeID, addNode, getInitNodeData]
@@ -100,10 +171,15 @@ export const PipelineUI = () => {
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 onInit={setReactFlowInstance}
+                onNodeContextMenu={onNodeContextMenu}
+                onSelectionChange={onSelectionChange}
                 nodeTypes={nodeTypes}
                 proOptions={proOptions}
                 snapGrid={[gridSize, gridSize]}
                 connectionLineType='smoothstep'
+                deleteKeyCode={null}
+                selectionKeyCode={['Shift']}
+                multiSelectionKeyCode={['Shift']}
             >
                 <Background color="red" gap={gridSize}/>
                 <Controls />
