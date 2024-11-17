@@ -129,7 +129,6 @@ export const PipelineUI = () => {
             
             try {
                 data = JSON.parse(event.dataTransfer.getData('application/reactflow'));
-                console.log('Dropped data:', data);
             } catch (err) {
                 console.error('Failed to parse drag data:', err);
                 return;
@@ -148,7 +147,6 @@ export const PipelineUI = () => {
                 position,
                 data: nodeData
             };
-            console.log('Adding new node:', newNode);
             addNode(newNode);
         },
         [reactFlowInstance, getNodeID, addNode, getInitNodeData]
