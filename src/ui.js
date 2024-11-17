@@ -105,7 +105,7 @@ export const PipelineUI = () => {
 
     useEffect(() => {
         const onKeyDown = (event) => {
-            if (event.key === 'Delete' || event.key === 'Backspace') {
+            if (event.key === 'Delete') {
                 handleDelete();
             }
         };
