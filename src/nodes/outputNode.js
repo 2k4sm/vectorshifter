@@ -1,47 +1,44 @@
 // outputNode.js
+import { useStore } from '../store';
+import { Node } from './Node';
+import { NodeDisplay } from '../commons/NodeFields';
 
-import { useState } from 'react';
-import { Handle, Position } from 'reactflow';
 
 export const OutputNode = ({ id, data }) => {
-  const [currName, setCurrName] = useState(data?.outputName || id.replace('customOutput-', 'output_'));
-  const [outputType, setOutputType] = useState(data.outputType || 'Text');
+  const updateNodeField = useStore(state => state.updateNodeField);
 
   const handleNameChange = (e) => {
-    setCurrName(e.target.value);
+    updateNodeField(id, 'outputName', e.target.value);
   };
 
-  const handleTypeChange = (e) => {
-    setOutputType(e.target.value);
+  const handleContentChange = (e) => {
+    updateNodeField(id, 'outputContent', e.target.value);
   };
 
   return (
-    <div style={{width: 200, height: 80, border: '1px solid black'}}>
-      <Handle
-        type="target"
-        position={Position.Left}
-        id={`${id}-value`}
-      />
-      <div>
-        <span>Output</span>
+    <Node
+      id={id}
+      nodeType="Output"
+      className="border-orange-600 bg-orange-200"
+      inputs={[
+        { id: 'value', label: 'Input' }
+      ]}
+      outputs={[
+        {id: 'value', label: 'Output'}
+      ]}
+    >
+      <div className="space-y-3">
+        <NodeDisplay
+          label="Name"
+          value={data?.outputName || id.replace('customOutput-', 'output_')}
+        />
+
+        <NodeDisplay
+          label="Content"
+          value = {data?.outputContent || id.replace('customOutput-', 'output_')}
+        />
+        
       </div>
-      <div>
-        <label>
-          Name:
-          <input 
-            type="text" 
-            value={currName} 
-            onChange={handleNameChange} 
-          />
-        </label>
-        <label>
-          Type:
-          <select value={outputType} onChange={handleTypeChange}>
-            <option value="Text">Text</option>
-            <option value="File">Image</option>
-          </select>
-        </label>
-      </div>
-    </div>
+    </Node>
   );
-}
+};
