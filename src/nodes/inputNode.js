@@ -1,6 +1,7 @@
 import { useStore } from '../store';
 import { Node } from './Node';
 import { NodeInput, NodeSelect } from '../commons/NodeFields';
+
 const inputTypeOptions = [
   { value: 'Text', label: 'Text' },
   { value: 'File', label: 'File' }
@@ -29,13 +30,13 @@ export const InputNode = ({ id, data }) => {
       <div className="space-y-3">
         <NodeInput
           label="Name"
-          value={data?.inputName || id.replace('customInput-', 'input_')}
+          value={data?.fieldValues?.inputName || ""}
           onChange={handleNameChange}
         />
 
         <NodeSelect
           label="Type"
-          value={data?.inputType || 'Text'}
+          value={data?.fieldValues?.inputType || 'Text'}
           onChange={handleTypeChange}
           options={inputTypeOptions}
         />

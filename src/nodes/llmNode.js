@@ -31,7 +31,7 @@ export const LLMNode = ({ id, data }) => {
       <div className="space-y-3">
         <NodeSelect
           label="Model"
-          value={data?.model || 'gpt-4'}
+          value={data?.fieldValues?.model || 'gpt-4'}
           onChange={handleModelChange}
           options={modelOptions}
         />
