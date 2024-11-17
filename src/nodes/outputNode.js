@@ -8,31 +8,12 @@ export const OutputNode = ({ id, data }) => {
   const edges = useStore(state => state.edges);
   const updateNodeField = useStore(state => state.updateNodeField);
   const prevConnectedNodeId = useRef(null);
+  const prevSourceData = useRef(null);
 
-  useEffect(() => {
-    const incomingEdge = edges.find(edge => edge.target === id);
-
-    const sourceNode = incomingEdge 
-      ? nodes.find(node => node.id === incomingEdge.source)
-      : null;
-
-    // Handle disconnection
-    if (!sourceNode && prevConnectedNodeId.current) {
-      console.log('Disconnection detected. Previous connection:', prevConnectedNodeId.current);
-      updateNodeField(id, 'sourceNodeId', null);
-      updateNodeField(id, 'sourceNodeType', null);
-      updateNodeField(id, 'content', null);
-      prevConnectedNodeId.current = null;
-      return;
-    }
-
-    if (!sourceNode || sourceNode.id === prevConnectedNodeId.current) {
-      return;
-    }
-
-    const nodeType = sourceNode.type;
-    console.log('Source Node Data:', sourceNode.data);
+  const processNodeContent = (sourceNode) => {
+    if (!sourceNode) return '';
     
+    const nodeType = sourceNode.type;
     let contentToStore = '';
 
     switch (nodeType) {
@@ -52,11 +33,9 @@ export const OutputNode = ({ id, data }) => {
         break;
       case 'custom':
         let value = ''
-
         for (let key in sourceNode.data?.fieldValues) {
           value += `${key}: ${sourceNode.data?.fieldValues[key]}\n`;
         }
-        console.log("custom data---->>>", value)
         contentToStore = value;
         break;
       default:
@@ -64,17 +43,43 @@ export const OutputNode = ({ id, data }) => {
         console.log('Unknown Node Type:', nodeType);
     }
 
+    return contentToStore;
+  };
 
-    if (contentToStore !== data?.fieldValues?.content) {
-      updateNodeField(id, 'sourceNodeId', sourceNode.id);
-      updateNodeField(id, 'sourceNodeType', nodeType);
-      updateNodeField(id, 'content', contentToStore);
-      prevConnectedNodeId.current = sourceNode.id;
-    } else {
-      console.log('Content unchanged, skipping update');
+  useEffect(() => {
+    const incomingEdge = edges.find(edge => edge.target === id);
+    const sourceNode = incomingEdge 
+      ? nodes.find(node => node.id === incomingEdge.source)
+      : null;
+
+    if (!sourceNode && prevConnectedNodeId.current) {
+      console.log('Disconnection detected');
+      updateNodeField(id, 'sourceNodeId', null);
+      updateNodeField(id, 'sourceNodeType', null);
+      updateNodeField(id, 'content', null);
+      prevConnectedNodeId.current = null;
+      prevSourceData.current = null;
+      return;
     }
 
-  }, [edges, nodes, id, updateNodeField, data?.fieldValues?.content]);
+    if (!sourceNode) return;
+
+    const currentSourceData = JSON.stringify(sourceNode.data?.fieldValues);
+    const hasSourceChanged = sourceNode.id !== prevConnectedNodeId.current;
+    const hasDataChanged = currentSourceData !== prevSourceData.current;
+
+    if (hasSourceChanged || hasDataChanged) {
+
+      const contentToStore = processNodeContent(sourceNode);
+
+      updateNodeField(id, 'sourceNodeId', sourceNode.id);
+      updateNodeField(id, 'sourceNodeType', sourceNode.type);
+      updateNodeField(id, 'content', contentToStore);
+
+      prevConnectedNodeId.current = sourceNode.id;
+      prevSourceData.current = currentSourceData;
+    }
+  }, [edges, nodes, id, updateNodeField]);
 
   return (
     <Node
