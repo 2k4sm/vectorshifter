@@ -1,3 +1,4 @@
+// Node.js
 import { Handle, Position } from 'reactflow';
 
 export const Node = ({ 
@@ -7,16 +8,20 @@ export const Node = ({
   outputs = [],
   children,
   className = '',
+  style = {},
 }) => {
   return (
-    <div className={`
-      w-64 min-h-[80px] 
-      border-2 rounded-lg 
-      shadow-sm
-      transition-all
-      hover:shadow-md
-      ${className}
-    `}>
+    <div 
+      className={`
+        w-64 min-h-[80px] 
+        border rounded-lg 
+        shadow-sm
+        transition-all
+        hover:shadow-md
+        ${className}
+      `}
+      style={style}
+    >
       {/* Input Handles */}
       {inputs.map((input, index) => (
         <Handle
@@ -50,6 +55,10 @@ export const Node = ({
           position={Position.Right}
           id={`${id}-${output.id}`}
           className="w-3 h-3 bg-gray-400 border-2 border-white"
+          style={{ 
+            top: outputs.length === 1 ? '50%' : `${((index + 1) * 100) / (outputs.length + 1)}%`,
+            ...output.style
+          }}
         />
       ))}
     </div>
