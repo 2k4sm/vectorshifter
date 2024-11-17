@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { NodeInput, NodeSelect } from '../commons/NodeFields';
 
 const fieldTypes = [
+  {value: 'textarea', label: 'Text Area'},
   { value: 'text', label: 'Text Input' },
   { value: 'select', label: 'Dropdown Select' },
-  { value: 'display', label: 'Display Field' }
 ];
 
 export const NodeConfigModal = ({ onSave, onClose, initialConfig = {} }) => {

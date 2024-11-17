@@ -2,21 +2,29 @@
 import { memo } from 'react';
 import { useStore } from '../store';
 import { Node } from './Node';
-import { NodeInput, NodeSelect, NodeDisplay } from '../commons/NodeFields';
+import { NodeInput, NodeSelect } from '../commons/NodeFields';
 
 export const CustomNode = memo(({ id, data }) => {
-    console.log('CustomNode rendering with data:', data); // Debug log
     
     const updateNodeField = useStore(state => state.updateNodeField);
 
     const renderField = (field) => {
-        console.log('Rendering field:', field); // Debug log
         
         const handleChange = (e) => {
             updateNodeField(id, field.id, e.target.value);
         };
 
         switch (field.type) {
+            case 'textarea':
+                return (
+                    <NodeInput
+                        key={field.id}
+                        label={field.label}
+                        value={data.fieldValues?.[field.id] || ''}
+                        onChange={handleChange}
+                        type='textarea'
+                    />
+                );
             case 'text':
                 return (
                     <NodeInput
@@ -24,6 +32,7 @@ export const CustomNode = memo(({ id, data }) => {
                         label={field.label}
                         value={data.fieldValues?.[field.id] || ''}
                         onChange={handleChange}
+                        type='text'
                     />
                 );
             
@@ -38,14 +47,6 @@ export const CustomNode = memo(({ id, data }) => {
                     />
                 );
             
-            case 'display':
-                return (
-                    <NodeDisplay
-                        key={field.id}
-                        label={field.label}
-                        value={data.fieldValues?.[field.id] || ''}
-                    />
-                );
             
             default:
                 return null;
@@ -64,8 +65,9 @@ export const CustomNode = memo(({ id, data }) => {
             }}
             inputs={data.inputs || []}
             outputs={data.outputs || []}
+            className='w-fit'
         >
-            <div className="space-y-3">
+            <div className="space-y-3 w-fit">
                 {data.fields?.map(field => (
                     <div key={field.id}>
                         {renderField(field)}
